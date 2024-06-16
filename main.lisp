@@ -63,7 +63,7 @@
   (last-elt (split-sequence:split-sequence #\/ pathname)))
 
 (defun exe-exist? (exe)
-  (not (emptyp (shell-to-string (sp:concat "command -v " exe)))))
+  (not (emptyp (ignore-errors (shell-to-string (sp:concat "command -v " exe))))))
 
 (defun download-video (url)
   (shell-to-string (sp:string-join
