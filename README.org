@@ -1,0 +1,8 @@
+Some experiemntal scribbles
+
+- Usage
+
+  #+BEGIN_SRC bash
+    nix run . --  -m <path_to_model> [-l <lang>] url
+  #+END_SRC
+
