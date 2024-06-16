@@ -12,6 +12,10 @@
           runtimeInputs = with pkgs;[
             openai-whisper-cpp
             ffmpeg
+            (sbcl.withPackages (ps:
+              with ps; [ arrow-macros arrow-macros
+                 serapeum  defmain ]
+            ))
           ];
           text = ''
                  ${self}/main.lisp "$@"
