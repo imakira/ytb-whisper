@@ -26,6 +26,10 @@
     (uiop:println message *error-output*)
     (uiop:quit 1)))
 
+(defun quote-arg (str)
+  (sp:concat "'" (sp:string-replace-all "'" str "'\\''")
+             "'"))
+
 (defun shell (command &rest args)
   (let* ((args (concatenate 'list
                             (list
@@ -65,30 +69,22 @@
   (shell-to-string (sp:string-join
                     (list "yt-dlp --print after_move:filepath \\"
                           "--embed-thumbnail \\"
-                          "--progress \\"
-                          "--newline \\"
-                          "--no-simulate \\"
-                          "--embed-chapters \\"
-                          url)
-                    #\newline)
-                   (sp:string-join
-                    (list "yt-dlp --print after_move:filepath \\"
-                          "--embed-thumbnail \\"
-                          "--progress \\"
-                          "--newline \\"
+                          "--quiet \\"
                           "--no-simulate \\"
                           "--embed-chapters \\"
                           url)
                     #\newline)))
 
 (defun generate-subtitle (whisper tmp-audio-path subtitle-path model lang)
-  (shell (sp:concat whisper " -m " model
-                    " '" tmp-audio-path "'"
-                    " -osrt '" subtitle-path "' "
+  (shell (sp:concat whisper " -m " model " "
+                    (quote-arg tmp-audio-path)
+                    " -osrt " (quote-arg subtitle-path) " "
                     " -l " lang
                     " -t " (prin1-to-string (min (ceiling (sp:count-cpus :online t) 4)
                                                  4))))
-  (shell (format nil "mv '~A.srt' '~A'" tmp-audio-path subtitle-path)))
+  (shell (format nil "mv ~A ~A"
+                 (quote-arg (sp:concat tmp-audio-path ".srt"))
+                 (quote-arg subtitle-path))))
 
 (defun -main (model lang whisper url)
   (let* ((video-path (download-video url))
@@ -102,19 +98,20 @@
                          ".srt")))
     (when (not (uiop:directory-exists-p *tmp-dir*))
       (shell (serapeum:concat "mkdir " *tmp-dir*)))
-    (shell (format nil "yes | ffmpeg -i '~A' -acodec pcm_s16le -ac 1 -ar 16000 '~A'"
-                   video-path
-                   tmp-audio-path))
+    (shell (format nil "ffmpeg -y -i ~A -acodec pcm_s16le -ac 1 -ar 16000 ~A"
+                   (quote-arg video-path)
+                   (quote-arg tmp-audio-path)))
     (generate-subtitle whisper tmp-audio-path subtitle-path model lang)
     (shell (sp:concat "vlc --sub-file "
-                      " '" subtitle-path "' "
+                      (quote-arg subtitle-path)
                       " "
-                      " '" video-path "' "))))
+                      (quote-arg video-path)))))
 
 (defmain:defmain (main) ((model "Path to the model file"
                                 :short "m")
                          (lang "Language for the video"
-                               :short "l")
+                               :short "l"
+                               :default "auto")
                          (whisper "Path to whisper.cpp executable"
                                   :short "w"
                                   :default (or (uiop:getenv "WHISPER_CPP") "whisper-cpp"))
