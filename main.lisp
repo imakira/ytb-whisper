@@ -30,6 +30,7 @@
   (sp:concat "'" (sp:string-replace-all "'" str "'\\''")
              "'"))
 
+
 (defun shell (command &rest args)
   (let* ((args (concatenate 'list
                             (list
@@ -78,7 +79,7 @@
 (defun generate-subtitle (whisper tmp-audio-path subtitle-path model lang)
   (shell (sp:concat whisper " -m " model " "
                     (quote-arg tmp-audio-path)
-                    " -osrt " (quote-arg subtitle-path) " "
+                    " -osrt "
                     " -l " lang
                     " -t " (prin1-to-string (min (ceiling (sp:count-cpus :online t) 4)
                                                  4))))
